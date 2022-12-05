@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.GroupProject.dao.BoardDao">
+
+	<select id="selectBoardReportList" resultType="com.GroupProject.dto.TotalBoardDto" >
+        SELECT *
+		FROM TOTALREPORT TR LEFT OUTER JOIN BOARD BD ON TR.REPORT_CODE = BD.BOARD_CODE
+            LEFT OUTER JOIN WALKBOARD WB ON TR.REPORT_CODE = WB.WALK_CODE
+		WHERE BD.BOARD_REPORT >= 5 OR WB.WALK_REPORT >= 5
+	</select>
+	
+</mapper>

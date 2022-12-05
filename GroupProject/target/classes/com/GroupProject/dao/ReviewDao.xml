@@ -1,0 +1,426 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.GroupProject.dao.ReviewDao">
+	
+	<!-- 임시 로그인 -->
+	<select id="getlogin" resultType="com.GroupProject.dto.MembersDto">
+
+	SELECT *
+	FROM MEMBER
+	WHERE MEMBER_ID = #{id}
+
+	</select>
+	
+	
+	
+	<!-- 후기 게시판 작성 -->
+	<insert id="getinsertwalk">
+
+		INSERT INTO
+		WALKBOARD(WALK_CODE,WALK_WRITER,WALK_CONTENT,WALK_TITLE,WALK_STATE,WALK_MID,WALK_DATE,WALK_WEATHERINFO,WALK_HITS,WALK_RECOMMEND,WALK_DECOMMEND,WALK_STARTADDR,WALK_BODYTYPE, WALK_REPORT,WALK_TIME,WALK_MAP,WALK_PEOPLE,WALK_FILE)
+		VALUES(#{walk_code},#{walk_writer},#{walk_content},#{walk_title},1,#{walk_mid},TO_DATE(SYSDATE,'YYYY-MM-DD HH24:MI:SS'),#{walk_weatherinfo},0,0,0,#{walk_startaddr},#{walk_bodytype},0,TO_DATE(#{walk_time},'YYYY-MM-DD HH24:MI:SS'),#{walk_map},#{walk_people},#{walk_file})
+
+
+	</insert>
+
+	<!-- 코드 생성 -->
+	<select id="getMaxRbcode" resultType="String">
+
+		SELECT MAX(WALK_CODE) FROM WALKBOARD
+		WHERE WALK_CODE LIKE '%RB%'
+	</select>
+	
+	
+	<!-- 산책 후기 목록 -->
+	<select id="walkreplyList" resultType="com.GroupProject.dto.WalkboardDto">
+
+		SELECT WALK_CODE,WALK_WRITER,TO_CHAR(WALK_DATE, 'YYYY-MM-DD HH24:MI:SS') AS WALK_DATE,WALK_TITLE,WALK_CONTENT,WALK_MID,WALK_MAP,WALK_REPLYCOUNT,WALK_RECOMMEND,WALK_DECOMMEND,WALK_REPORT,WALK_HTIS,WALK_PEOPLE
+		FROM WALKBOARD
+		ORDER BY WALK_DATE
+		
+	</select>
+	
+
+
+<!-- 전체 글목록 개수 -->
+<select id="getTotalResult" resultType="int">
+
+SELECT COUNT(*) 
+FROM WALKBOARD 
+WHERE WALK_STATE = 1
+
+
+</select>
+
+
+
+<!-- 회원 주소 검색 -->
+<select id="selmemberaddr" resultType="com.GroupProject.dto.MembersDto">
+
+SELECT MEMBER_ADDRESS 
+FROM MEMBER 
+WHERE MEMBER_ID = #{mid}
+
+
+</select>
+
+
+<!-- 단어검색결과 페이징처리된 글들 모음 -->
+<select id="getBoardPagingList" resultType="com.GroupProject.dto.WalkboardDto">
+
+	SELECT 
+		
+		WALK_CODE,WALK_WRITER,TO_CHAR(WALK_DATE, 'YYYY-MM-DD HH24:MI:SS') AS
+		WALK_DATE,WALK_TITLE,WALK_CONTENT,WALK_MID,WALK_MAP,WALK_REPLYCOUNT,
+		NVL(WALK_RECOMMEND,0)AS WALK_RECOMMEND,NVL(WALK_DECOMMEND,0)AS
+		WALK_DECOMMEND,WALK_REPORT,WALK_HITS,WALK_STARTADDR,WALK_WEATHERINFO,WALK_TIME,WALK_BODYTYPE,WALK_PEOPLE
+		
+		FROM (SELECT ROWNUM RN, WALKBOARD.* FROM WALKBOARD
+		WHERE WALK_STATE = 1 AND WALK_CODE LIKE '%RB%' AND WALK_STARTADDR LIKE '%'||#{searchAddr}||'%' 
+		
+		<if test="searchType == 'board_writer'">
+			AND WALK_WRITER LIKE '%'||#{searchWord }||'%'
+		</if>
+		
+		<if test="searchType == 'board_title'">
+			AND WALK_TITLE LIKE '%'||#{searchWord }||'%'
+		</if>
+		
+		<if test="searchType == 'board_title_content'">
+			AND WALK_TITLE LIKE '%'||#{searchWord }||'%' OR WALK_CONTENT LIKE '%'||#{searchWord}||'%'
+		</if>
+		
+		ORDER BY WALK_CODE ASC) WHERE RN BETWEEN #{startRow} AND #{endRow}
+
+
+</select>
+
+<!-- 산책 후기 상세페이지 -->
+<select id="selectReviewInfo" resultType="com.GroupProject.dto.WalkboardDto">
+
+SELECT WALK_CODE,WALK_WRITER,TO_CHAR(WALK_DATE, 'YYYY-MM-DD HH24:MI:SS') AS WALK_DATE,WALK_TITLE,WALK_CONTENT,WALK_MID,WALK_MAP,WALK_REPLYCOUNT,WALK_RECOMMEND,WALK_DECOMMEND,WALK_REPORT,WALK_HITS,WALK_STARTADDR,WALK_STATE,WALK_WEATHERINFO,TO_CHAR(WALK_TIME, 'YYYY-MM-DD HH24:MI:SS') AS WALK_TIME,WALK_BODYTYPE
+FROM WALKBOARD 
+WHERE WALK_STATE = 1 AND WALK_CODE = #{walk_code} 
+
+
+
+</select>
+
+<!-- 글조회수 -->
+<update id="updatereviewhits">
+
+UPDATE WALKBOARD 
+SET WALK_HITS = #{walk_hits} 
+WHERE WALK_CODE = #{walk_code}
+
+
+</update>
+
+
+<!-- 추천 중복 방지 검색 -->
+<select id="getloginsel" resultType="com.GroupProject.dto.CommendDto">
+
+SELECT *
+FROM COMMEND
+WHERE MEMBER_ID = #{member_id} AND CODE = #{walk_code}
+
+</select>
+
+
+<!-- 추천한 id insert -->
+<insert id="getinsertLogin">
+
+INSERT INTO COMMEND VALUES(#{walk_code},#{member_id},#{commend})
+
+
+
+</insert>
+
+<!-- 좋아요/싫어요 적용 -->
+<update id="updateReviewCommend">
+
+<if test="commend == 1">
+
+UPDATE WALKBOARD 
+SET WALK_RECOMMEND = WALK_RECOMMEND + 1
+WHERE WALK_CODE = #{walk_code}
+
+</if>
+
+<if test="commend == -1">
+
+UPDATE WALKBOARD 
+SET WALK_DECOMMEND = WALK_DECOMMEND + 1
+WHERE WALK_CODE = #{walk_code}
+
+</if>
+
+
+</update>
+
+
+<!-- 추천 테이블 업데이트 -->
+<update id="updateCommend">
+
+UPDATE COMMEND
+SET COMMEND = #{commend}
+WHERE CODE = #{walk_code} AND MEMBER_ID = #{member_id}
+
+
+</update>
+
+<!-- 좋아요/싫어요 수정 적용 -->
+<update id="updateModifyReviewCommend">
+
+<if test="commend == 1">
+
+UPDATE WALKBOARD 
+SET WALK_RECOMMEND = WALK_RECOMMEND + 1 , WALK_DECOMMEND = WALK_DECOMMEND - 1
+WHERE WALK_CODE = #{walk_code}
+
+</if>
+
+<if test="commend == -1">
+
+UPDATE WALKBOARD 
+SET WALK_DECOMMEND = WALK_DECOMMEND + 1, WALK_RECOMMEND = WALK_RECOMMEND - 1
+WHERE WALK_CODE = #{walk_code}
+
+</if>
+
+
+</update>
+
+
+<!-- 신고 기능 -->
+<update id="updateReviewReportState">
+
+UPDATE WALKBOARD 
+SET WALK_REPORT = WALK_REPORT + 1
+WHERE WALK_CODE = #{code}
+
+
+</update>
+
+<!-- 신고 중복 방지 검색 -->
+<select id="reportresult" resultType="com.GroupProject.dto.ReportDto">
+
+SELECT *
+FROM REPORT
+WHERE MEMBER_ID = #{member_id} AND CODE = #{code}
+
+</select>
+
+<!-- 신고한 id insert -->
+<insert id="Reportinsert">
+
+INSERT INTO REPORT (CODE, MEMBER_ID) VALUES(#{code},#{member_id})
+
+
+
+</insert>
+
+<!-- 댓글 작성 -->
+<insert id="insertComment">
+
+INSERT INTO RECOMMENT(RECOMMENT_CODE,RECOMMENT_BOARDCODE,RECOMMENT_WRITER,RECOMMENT_CONTENT,RECOMMENT_DATE,RECOMMENT_STATE,RECOMMENT_REPORT,RECOMMENT_PROFILE) VALUES(#{recomment_code},#{recomment_boardcode},#{recomment_writer},#{recomment_content},SYSDATE,1,0,#{recomment_profile})
+
+
+
+</insert>
+
+
+<!-- 댓글 목록 출력-->
+<select id="selectcommentList" resultType="com.GroupProject.dto.RecommentDto">
+
+SELECT RECOMMENT_CODE,RECOMMENT_BOARDCODE,RECOMMENT_WRITER,RECOMMENT_CONTENT,TO_CHAR(RECOMMENT_DATE, 'YYYY-MM-DD HH24:MI:SS') AS RECOMMENT_DATE,RECOMMENT_STATE,RECOMMENT_REPORT,RECOMMENT_PROFILE
+FROM RECOMMENT
+WHERE RECOMMENT_BOARDCODE = #{recomment_boardcode} AND RECOMMENT_STATE = '1'
+ORDER BY RECOMMENT_CODE ASC
+
+</select>
+
+<!-- 회원 프로필 사진 출력 -->
+<select id="selectmidprofile" resultType="com.GroupProject.dto.MembersDto">
+
+SELECT MEMBER_PROFILE
+FROM MEMBER
+WHERE MEMBER_ID = #{recomment_writer}
+
+</select>
+
+<!-- 댓글 최대값 -->
+<select id="getMaxRcode" resultType="String">
+
+	SELECT MAX(RECOMMENT_CODE) FROM RECOMMENT
+
+</select>
+
+
+<!-- 댓글 신고 중복 방지 검색 -->
+<select id="Commentreportselect" resultType="com.GroupProject.dto.ReportDto">
+
+SELECT *
+FROM REPORT
+WHERE MEMBER_ID = #{member_id} AND CODE = #{code} AND BOARDCODE = #{boardcode }
+
+</select>
+
+<!-- 신고한 id insert -->
+<insert id="commentReportinsert">
+
+INSERT INTO REPORT VALUES(#{code},#{member_id},#{boardcode })
+
+
+</insert>
+
+
+<!-- 신고 기능 -->
+<update id="updateCommentReport">
+
+UPDATE RECOMMENT 
+SET RECOMMENT_REPORT = RECOMMENT_REPORT + 1
+WHERE RECOMMENT_CODE = #{recomment_code} AND RECOMMENT_BOARDCODE = #{recomment_boardcode}
+
+
+</update>
+
+<!-- 댓글 수정 -->
+<update id="updateCommentModify">
+
+UPDATE RECOMMENT 
+SET RECOMMENT_CONTENT = #{recomment_content} 
+WHERE RECOMMENT_CODE = #{recomment_code} AND RECOMMENT_BOARDCODE = #{recomment_boardcode}
+
+
+</update>
+
+<!-- 댓글 삭제 -->
+<update id="updateCommentState">
+
+UPDATE RECOMMENT 
+SET RECOMMENT_STATE = 0
+WHERE RECOMMENT_CODE = #{recomment_code} AND RECOMMENT_BOARDCODE = #{recomment_boardcode}
+
+
+</update>
+
+
+<!-- 상세페이지 수정 처리 -->
+<update id="updateReviewInfo">
+
+UPDATE WALKBOARD 
+SET WALK_TITLE = #{walk_title} , WALK_CONTENT = #{walk_content}
+WHERE WALK_CODE = #{walk_code}
+
+
+</update>
+
+<!-- 상세페이지 삭제 처리 -->
+<update id="updateReviewState">
+
+UPDATE WALKBOARD 
+SET WALK_STATE = 0
+WHERE WALK_CODE = #{walk_code}
+
+
+</update>
+
+<!-- 댓글 개수 확인 -->
+<select id="getreviewcommentcount" resultType="int">
+
+SELECT COUNT(*)
+FROM RECOMMENT
+WHERE RECOMMENT_STATE = 1 AND RECOMMENT_CODE LIKE '%'||#{RC}||'%' AND RECOMMENT_BOARDCODE = #{recommend_boardcode }
+
+</select>
+
+<!-- 회원 주소 검색 -->
+<select id="selectMemberAddr" resultType="String">
+		SELECT MEMBER_ADDRESS FROM MEMBER WHERE MEMBER_ID = #{searchId}
+</select>
+
+
+<!-- 목록검색결과 개수 -->
+<select id="selectWalkSearchListCount" resultType="int">
+		SELECT COUNT(*) FROM WALKBOARD WHERE WALK_CODE LIKE 'RB%' AND WALK_STARTADDR LIKE '%'||#{searchAddr}||'%'
+		
+	<if test="searchType == 'board_writer'">
+			AND WALK_WRITER LIKE '%'||#{searchWord }||'%'
+	</if>
+		
+	<if test="searchType == 'board_title'">
+			AND WALK_TITLE LIKE '%'||#{searchWord }||'%'
+	</if>
+		
+	<if test="searchType == 'board_title_content'">
+			AND WALK_TITLE LIKE '%'||#{searchWord }||'%' OR WALK_CONTENT LIKE '%'||#{searchWord}||'%'
+	</if>
+		
+</select>
+
+
+<!-- 내 산책 내역 목록 -->
+<select id="mywalkListSelect" resultType="com.GroupProject.dto.WalkboardDto">
+
+SELECT WALK_CODE,WALK_WRITER,TO_CHAR(WALK_DATE, 'YYYY-MM-DD') AS WALK_DATE,TO_CHAR(WALK_TIME, 'YYYY-MM-DD HH24:MI:SS') AS WALK_TIME,WALK_TITLE,WALK_CONTENT,WALK_MID,WALK_MAP,WALK_REPLYCOUNT,WALK_RECOMMEND,WALK_DECOMMEND,WALK_REPORT,WALK_HITS,WALK_STARTADDR,WALK_STATE,WALK_PEOPLE
+FROM WALKBOARD 
+WHERE WALK_STATE = 1 AND WALK_MID LIKE '%'||#{walk_mid}||'%' AND WALK_CODE LIKE 'WB%' AND SYSDATE >= WALK_TIME 
+ORDER BY WALK_TIME ASC
+
+
+
+</select>
+
+
+<!-- 검색기능 -->
+<select id="myListSearchList" resultType="com.GroupProject.dto.WalkboardDto">
+	SELECT WALK_CODE,WALK_WRITER,TO_CHAR(WALK_DATE, 'YYYY-MM-DD') AS WALK_DATE,TO_CHAR(WALK_TIME, 'YYYY-MM-DD HH24:MI:SS') AS WALK_TIME,WALK_TITLE,WALK_CONTENT,WALK_MID,WALK_MAP,WALK_REPLYCOUNT,WALK_RECOMMEND,WALK_DECOMMEND,WALK_REPORT,WALK_HITS,WALK_STARTADDR,WALK_STATE,WALK_PEOPLE
+	FROM WALKBOARD
+	WHERE WALK_CODE LIKE '%WB%' AND WALK_STATE = 1 AND
+		
+	<if test="searchType == 'board_writer'">
+	WALK_WRITER LIKE '%'||#{searchWord }||'%'
+	</if>
+		
+	<if test="searchType == 'board_title'">
+	WALK_TITLE LIKE '%'||#{searchWord }||'%'
+	</if>
+		
+	<if test="searchType == 'board_mid'">
+	WALK_MID LIKE '%'||#{searchWord }||'%'
+	</if>
+		
+	ORDER BY WALK_TIME ASC
+	
+</select>
+
+<!-- 산책 모집 정보 검색  -->
+<select id="walkinfoselect" resultType="com.GroupProject.dto.WalkboardDto">
+
+SELECT WALK_CODE,WALK_WRITER,SYSDATE AS WALK_DATE,TO_CHAR(WALK_TIME, 'YYYY-MM-DD HH24:MI:SS') AS WALK_TIME,WALK_TITLE,WALK_CONTENT,WALK_MID,WALK_MAP,WALK_REPLYCOUNT,WALK_RECOMMEND,WALK_DECOMMEND,WALK_REPORT,WALK_HITS,WALK_STARTADDR,WALK_STATE,WALK_WEATHERINFO,WALK_BODYTYPE,WALK_PEOPLE
+FROM WALKBOARD 
+WHERE WALK_STATE = 1 AND WALK_MID LIKE '%'||#{walk_mid}||'%' AND WALK_CODE = #{walk_code}
+
+
+</select>
+
+
+<!-- 내 산책 내역 목록 -->
+<select id="rbcheckcount" resultType="int">
+
+SELECT NVL(COUNT(*),0)
+FROM WALKBOARD 
+WHERE WALK_FILE = #{code} AND WALK_WRITER = #{walk_mid}
+
+
+</select>
+
+
+
+
+
+</mapper>

@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.GroupProject.dao.CrewDao">
+
+<select id="selectMaxCrewCode" resultType="String">
+	SELECT MAX(CREW_CODE) FROM CREW
+</select>
+
+<insert id="insertCrewInfo">
+	INSERT INTO CREW VALUES(#{crew_code},#{crew_name},#{crew_master},1,#{crew_region},#{crew_dogweight},#{crew_introduce},0,#{crew_profile},20)
+</insert>
+
+<select id="selectCrewList" resultType="com.GroupProject.dto.CrewDto">
+	SELECT * FROM CREW WHERE CREW_STATE = 1 AND CREW_REGION LIKE '%'||#{searchAddr}||'%'
+</select>
+
+<select id="selectMemberAddr" resultType="String">
+	SELECT MEMBER_ADDRESS FROM MEMBER WHERE MEMBER_ID = #{searchId}
+</select>
+
+<update id="updateMemberCrewcode">
+	UPDATE MEMBER SET MEMBER_CREWCODE = #{crewCode} WHERE MEMBER_ID = #{searchId}
+</update>
+
+<select id="selectCrewMemberCheck" resultType="String">
+	SELECT NVL(MEMBER_CREWCODE,'NO') FROM MEMBER WHERE MEMBER_ID = #{searchId}
+</select>
+
+<select id="selectCrewSearchListCount" resultType="int">
+		SELECT COUNT(*) FROM CREW WHERE CREW_REGION LIKE '%'||#{searchAddr}||'%' AND CREW_STATE = 1
+		
+		<if test="searchType == 'crew_name'">
+			AND CREW_NAME LIKE '%'||#{searchWord}||'%'
+		</if>
+		
+		<if test="searchType == 'crew_master'">
+			AND CREW_MASTER LIKE '%'||#{searchWord}||'%'
+		</if>
+		
+		<if test="searchType == 'crew_introduce'">
+			AND CREW_INTRODUCE LIKE '%'||#{searchWord}||'%'
+		</if>
+</select>
+
+
+<select id="selectCrewSearchPagingList"	resultType="com.GroupProject.dto.CrewDto">
+	SELECT * FROM (SELECT ROWNUM AS RN,CREW.*,CURRENTCOUNT FROM CREW INNER JOIN (SELECT COUNT(MEMBER_CREWCODE) AS CURRENTCOUNT ,
+	 MEMBER_CREWCODE FROM MEMBER WHERE MEMBER_CREWCODE IS NOT NULL GROUP BY MEMBER_CREWCODE ORDER BY MEMBER_CREWCODE ASC) 
+	 ON CREW_CODE = MEMBER_CREWCODE WHERE CREW_STATE = 1  AND CREW_REGION LIKE '%'||#{searchAddr}||'%' 
+		
+	<if test="searchType == 'crew_name'">
+		AND CREW_NAME LIKE '%'||#{searchWord}||'%'
+	</if>
+		
+	<if test="searchType == 'crew_master'">
+		AND CREW_MASTER LIKE '%'||#{searchWord}||'%'
+	</if>
+		
+	<if test="searchType == 'crew_introduce'">
+		AND CREW_INTRODUCE LIKE '%'||#{searchWord}||'%'
+	</if>
+		
+	 ORDER BY CREW_CODE ASC) WHERE RN BETWEEN #{startRow} AND #{endRow} 
+</select>
+
+<select id="selectCrewDogCode" resultType="String">
+	SELECT CREW_DOGWEIGHT FROM CREW WHERE CREW_CODE = #{crewCode}
+</select>
+
+<select id="selectCrewInfo" resultType="com.GroupProject.dto.CrewDto">
+	SELECT * FROM CREW WHERE CREW_CODE = #{crewCode}
+</select>
+
+<update id="updateCrewInfo">
+	UPDATE CREW SET 
+	<if test="crew_introduce.length>10">
+	CREW_INTRODUCE = #{crew_introduce} 
+	</if>	
+	<if test="crew_profile.length >0">	
+		<if test="crew_introduce.length>10">
+		,
+		</if>
+	CREW_PROFILE = #{crew_profile}
+	</if>
+	WHERE CREW_CODE = #{crew_code}
+</update>
+
+<update id="updateMemberDelCrewCode">
+	UPDATE MEMBER SET MEMBER_CREWCODE = (null) WHERE MEMBER_ID = #{searchId} 	
+</update>
+
+<select id="selectCrewMemberList" resultType="com.GroupProject.dto.MembersDto">
+	SELECT * FROM MEMBER WHERE MEMBER_CREWCODE = #{searchCrewCode}
+</select>
+
+<update id="updateCrewDelState">
+	UPDATE CREW SET CREW_STATE = 0 WHERE CREW_CODE = #{searchCrewCode} 	
+</update>
+
+<update id="updateMemberDelCrewcode">
+	UPDATE MEMBER SET MEMBER_CREWCODE = (null) WHERE MEMBER_CREWCODE = #{searchCrewCode} 	
+</update>
+
+<select id="selectCrewDogList" resultType="com.GroupProject.dto.DogInfoDto">
+	SELECT * FROM DOGINFO WHERE DOG_OWNER = #{memberId}
+</select>
+
+<update id="updateCresMaster">
+	UPDATE CREW SET CREW_MASTER = #{memberId} WHERE CREW_CODE = #{searchCrewCode} 	
+</update>
+
+
+<select id="selectCrewDogWeight" resultType="String">
+	SELECT CREW_DOGWEIGHT FROM CREW WHERE CREW_CODE = #{searchCrewCode}
+</select>
+
+<select id="selectMaxCrewWalkCode" resultType="String">
+		SELECT NVL(MAX(WALK_CODE),'CB000') FROM WALKBOARD WHERE WALK_CODE LIKE 'CB%'
+</select>
+
+<select id="selectCrewWalkSearchListCount" resultType="int">
+	SELECT COUNT(*) FROM WALKBOARD WHERE WALK_CREWCODE = #{searchCrewCode}
+</select>
+
+<select id="selectCrewWalkPagingList"	resultType="com.GroupProject.dto.WalkboardDto">
+	SELECT * FROM (SELECT ROWNUM AS RN, WB.* FROM ( SELECT * FROM WALKBOARD WHERE WALK_STATE = 1 AND WALK_CREWCODE = #{searchCrewCode} AND WALK_CODE LIKE '%CB%' ORDER BY WALK_CODE DESC ) WB) 
+	WHERE RN BETWEEN #{startRow} AND #{endRow}
+</select>
+
+<insert id="insertCrewWalkWrite">
+	INSERT INTO WALKBOARD 
+	(WALK_CODE,	WALK_WRITER, WALK_DATE, WALK_TITLE, WALK_CONTENT,WALK_MAP,WALK_TIME,WALK_BODYTYPE,WALK_STARTADDR,WALK_WEATHERINFO,
+	WALK_STATE, WALK_HITS,WALK_REPORT,WALK_RECOMMEND,WALK_DECOMMEND,WALK_REPLYCOUNT,WALK_PEOPLE,WALK_MID,WALK_CREWCODE)
+	
+	VALUES( #{walk_code},#{walk_writer},SYSDATE,#{walk_title},#{walk_content},#{walk_map}, 
+	TO_DATE(#{walk_time},'yyyyMMdd/HH24MI'), #{walk_bodytype},	#{walk_startaddr},	#{walk_weatherinfo},	
+	1, 0, 0, 0, 0, 0,#{walk_people},#{walk_writer},	#{walk_crewcode})
+</insert>
+
+<select id="selectCrewWalkViewInfo"	resultType="com.GroupProject.dto.WalkboardDto">
+	SELECT * FROM WALKBOARD WHERE WALK_CODE = #{walk_code}
+</select>
+
+<select id="selectMaxCWcode"	resultType="String">
+	SELECT NVL(MAX(WALK_CODE),'CW000') FROM WALKBOARD WHERE WALK_CODE LIKE '%CW%'
+</select>
+
+
+<insert id="insertCrewReview">
+	INSERT INTO
+	WALKBOARD(WALK_CODE,WALK_WRITER,WALK_CONTENT,WALK_TITLE,WALK_STATE,WALK_MID,WALK_DATE,WALK_WEATHERINFO,
+	WALK_HITS,WALK_RECOMMEND,WALK_DECOMMEND,WALK_STARTADDR,WALK_BODYTYPE,WALK_TIME,WALK_MAP,WALK_PEOPLE,WALK_FILE,WALK_CREWCODE,WALK_REPLYCOUNT,WALK_REPORT)
+	
+	VALUES(#{walk_code},#{walk_writer},#{walk_content},#{walk_title},1,#{walk_mid},SYSDATE,
+	#{walk_weatherinfo},0,0,0,#{walk_startaddr},#{walk_bodytype},TO_DATE(#{walk_time},'YYYY-MM-DD HH24:MI:SS'),
+	#{walk_map},#{walk_people},#{walk_file},#{walk_crewcode},0,0)
+
+</insert>
+
+<select id="selectCheckCrewReviewCountforGrant"	resultType="int">
+	SELECT COUNT(*) FROM WALKBOARD WHERE WALK_CODE LIKE '%CW%' AND WALK_WRITER = #{walk_writer} AND WALK_FILE = #{walk_code} AND WALK_STATE =1 
+</select>
+
+<select id="selectCrewReviewSearchListCount"	resultType="int">
+	SELECT COUNT(*) FROM WALKBOARD WHERE WALK_CODE LIKE '%CW%' AND WALK_CREWCODE = #{walk_crewcode}
+</select>
+
+<select id="selectCrewReviewListPaging"	resultType="com.GroupProject.dto.WalkboardDto">
+SELECT * FROM (SELECT ROWNUM AS RN, WB.* FROM ( SELECT * FROM WALKBOARD WHERE WALK_STATE = 1 AND WALK_CREWCODE = #{walk_crewcode} AND WALK_CODE LIKE '%CW%' ORDER BY WALK_CODE DESC ) WB) 
+	WHERE RN BETWEEN #{startRow} AND #{endRow}
+</select>
+
+<select id="selectCrewReviewCommentCount"	resultType="int">
+SELECT COUNT(*) FROM RECOMMENT WHERE RECOMMENT_BOARDCODE = #{boardcode}
+</select>
+
+<select id="selectCrewReviewInfo"	resultType="com.GroupProject.dto.WalkboardDto">
+SELECT * FROM WALKBOARD, (SELECT COUNT(*) AS WALKBOARD_REPLYCOUNT  FROM RECOMMENT WHERE RECOMMENT_BOARDCODE = #{walkcode}) WHERE WALK_CODE = #{walkcode}
+</select>
+
+<!-- 추천 중복 방지 검색 -->
+<select id="getloginsel" resultType="com.GroupProject.dto.CommendDto">
+
+SELECT *
+FROM COMMEND
+WHERE MEMBER_ID = #{member_id} AND CODE = #{walk_code}
+
+</select>
+	
+<update id="updateCrewReviewHits">
+
+UPDATE WALKBOARD 
+SET WALK_HITS = WALK_HITS+1
+WHERE WALK_CODE = #{walk_code}
+
+</update>	
+<!-- 
+<select id="selectCrewRivewCommentList" 	resultType="com.GroupProject.dto.RecommentDto">
+
+SELECT * FROM RECOMMENT WHERE RECOMMENT_BOARDCODE = #{recomment_boardcode} ORDER BY RECOMMENT_CODE
+
+</select> -->
+
+<select id="selectCrewWalkBoardMax"	resultType="com.GroupProject.dto.WalkboardDto">
+  SELECT * FROM WALKBOARD WHERE WALK_CODE = (SELECT MAX(WALK_CODE) FROM WALKBOARD WHERE WALK_CREWCODE = #{crewCode} AND WALK_CODE LIKE '%CB%' AND WALK_STATE =1)
+</select>
+<select id="selectCrewReviewBoardMax"	resultType="com.GroupProject.dto.WalkboardDto">
+  SELECT * FROM WALKBOARD WHERE WALK_CODE = (SELECT MAX(WALK_CODE) FROM WALKBOARD WHERE WALK_CREWCODE = #{crewCode} AND WALK_CODE LIKE '%CW%' AND WALK_STATE =1)
+</select>
+
+<select id="selectCrewChatList"	resultType="com.GroupProject.dto.ChatDto">
+  SELECT * FROM CHAT INNER JOIN (SELECT MEMBER_ID, MEMBER_PROFILE AS CHAT_PROFILE FROM MEMBER) ON CHAT_ID = MEMBER_ID WHERE CHAT_CODE = #{crewCode} ORDER BY CHAT_DATE
+</select>
+
+<insert id="insertCrewChat">
+	INSERT INTO CHAT VALUES(#{chat_code},#{chat_id},#{chat_content}, SYSDATE)
+</insert>
+
+
+<select id="Commentreportselect" resultType="com.GroupProject.dto.ReportDto">
+
+SELECT * FROM REPORT WHERE CODE = #{code}
+</select>
+
+<select id="selectCrewViewRecomment" resultType="com.GroupProject.dto.RecommentDto">
+
+SELECT * FROM RECOMMENT WHERE RECOMMENT_CODE = #{code}
+
+</select>
+
+<!-- 신고한 id insert -->
+<insert id="commentReportinsert">
+
+INSERT INTO REPORT VALUES(#{recomment_code}, #{recomment_writer}, #{recomment_boardcode})
+
+</insert>
+
+<!-- 신고 기능 -->
+<update id="updateCommentReport">
+
+UPDATE RECOMMENT 
+SET RECOMMENT_REPORT = RECOMMENT_REPORT + 1 WHERE RECOMMENT_CODE = #{recomment_code}
+
+
+</update>
+
+<select id="selectCrewChat" resultType="com.GroupProject.dto.ChatDto">
+SELECT CHAT.*, MEMBER.MEMBER_PROFILE AS CHAT_PROFILE FROM CHAT, MEMBER WHERE CHAT_ID = MEMBER_ID AND CHAT_CODE = 'CR001' AND CHAT_DATE = (SELECT MAX(CHAT_DATE) FROM CHAT WHERE CHAT_CODE = #{chat_code})
+
+</select>
+
+</mapper>

@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.GroupProject.dao.WalkDao">
+
+	<select id="selectMembersDogWeight"	resultType="com.GroupProject.dto.DogInfoDto">
+		SELECT * FROM DOGINFO WHERE DOG_OWNER = #{searchId} AND DOG_STATE = 1
+	</select>
+	
+	<select id="selectMembersInfo"	resultType="com.GroupProject.dto.MembersDto">
+		SELECT * FROM MEMBER WHERE MEMBER_ID = #{searchId}
+	</select>
+	
+	<select id="selectAddrxy" resultType="com.GroupProject.dto.AddrxyDto">
+		SELECT * FROM ADDRXY WHERE ADDR LIKE '%'||#{addr}||'%'
+		<if test="detailaddr.length > 0">
+		 AND DETAILADDR LIKE '%'||#{detailaddr}||'%'
+		 </if>
+		 <if test="detailaddr.length == 0">
+		 AND DETAILADDR IS NULL
+		 </if>
+	</select>
+
+	<select id="selectLocalCode" resultType="String">
+		SELECT CODE FROM LOCALCODE WHERE LOCAL LIKE '%'||#{middleaddress}||'%'
+	</select>
+
+	<select id="selectlocalCount" resultType="int">
+		SELECT COUNT(LOCAL) FROM LOCALCITYCODE WHERE LOCAL LIKE	'%'||#{localAddr}||'%'
+	</select>
+
+
+	<select id="selectCityCode" resultType="String">
+		SELECT CODE FROM LOCALCITYCODE WHERE CITY LIKE '%'||#{addr}||'%'
+	</select>
+
+
+	<insert id="insertWrite">
+		INSERT INTO WALKBOARD (WALK_CODE, WALK_WRITER, WALK_DATE, WALK_TITLE,
+		WALK_CONTENT, WALK_MAP, WALK_TIME, WALK_BODYTYPE, WALK_STARTADDR, WALK_WEATHERINFO,
+		WALK_STATE, WALK_HITS, WALK_REPORT, WALK_RECOMMEND,	WALK_DECOMMEND,WALK_REPLYCOUNT,WALK_PEOPLE,WALK_MID)
+		VALUES( #{walk_code}, #{walk_writer}, SYSDATE, #{walk_title},
+		#{walk_content}, #{walk_map}, TO_DATE(#{walk_time},'yyyyMMdd/HH24MI'), #{walk_bodytype},
+		#{walk_startaddr}, #{walk_weatherinfo},	1, 0, 0, 0, 0, 0,#{walk_people},#{walk_writer})
+	</insert>
+
+	<select id="selectMaxWalkCode" resultType="String">
+		SELECT NVL(MAX(WALK_CODE),'WB000') FROM WALKBOARD WHERE WALK_CODE LIKE 'WB%'
+	</select>
+	
+
+	
+	<select id="selectWalkSearchListCount" resultType="int">
+		SELECT COUNT(*) FROM WALKBOARD WHERE WALK_CODE LIKE 'WB%' AND WALK_STARTADDR LIKE '%'||#{searchAddr}||'%' AND WALK_TIME >= SYSDATE AND WALK_STATE = 1
+		
+		<if test="searchType == 'board_writer'">
+			AND WALK_WRITER LIKE '%'||#{searchWord }||'%'
+		</if>
+		
+		<if test="searchType == 'board_title'">
+			AND WALK_TITLE LIKE '%'||#{searchWord }||'%'
+		</if>
+		
+		<if test="searchType == 'board_title_content'">
+			AND WALK_TITLE LIKE '%'||#{searchWord }||'%' OR WALK_CONTENT LIKE '%'||#{searchWord}||'%'
+		</if>
+		
+	</select>
+
+
+
+	
+	<select id="selectWalkSearchPagingList"	resultType="com.GroupProject.dto.WalkboardDto">
+		SELECT 
+		
+		WALK_CODE,WALK_WRITER,TO_CHAR(WALK_DATE, 'YYYY-MM-DD') AS
+		WALK_DATE,WALK_TITLE,WALK_CONTENT,WALK_MID,WALK_MAP,WALK_REPLYCOUNT,
+		NVL(WALK_RECOMMEND,0)AS WALK_RECOMMEND,NVL(WALK_DECOMMEND,0)AS
+		WALK_DECOMMEND,WALK_REPORT,WALK_HITS,WALK_STARTADDR,WALK_WEATHERINFO,WALK_TIME,WALK_BODYTYPE, WALK_PEOPLE
+		
+		FROM (SELECT ROWNUM RN, WALKBOARD.* FROM WALKBOARD
+		WHERE WALK_STATE = 1 AND WALK_CODE LIKE 'WB%' AND WALK_STARTADDR LIKE '%'||#{searchAddr}||'%' AND WALK_TIME >= SYSDATE 
+		
+		<if test="searchType == 'board_writer'">
+			AND WALK_WRITER LIKE '%'||#{searchWord }||'%'
+		</if>
+		
+		<if test="searchType == 'board_title'">
+			AND WALK_TITLE LIKE '%'||#{searchWord }||'%'
+		</if>
+		
+		<if test="searchType == 'board_title_content'">
+			AND WALK_TITLE LIKE '%'||#{searchWord }||'%' OR WALK_CONTENT LIKE '%'||#{searchWord}||'%'
+		</if>
+		
+		ORDER BY WALK_CODE ASC) WHERE RN BETWEEN #{startRow} AND #{endRow}
+		
+	</select>
+
+	
+	<select id="selectMemberAddr" resultType="String">
+		SELECT MEMBER_ADDRESS FROM MEMBER WHERE MEMBER_ID = #{searchId}
+	</select>
+	
+	
+	
+	<select id="selectWalkSearchDogWeightCode"	resultType="String">
+		SELECT  WALK_BODYTYPE FROM DOGINFO WHERE WALK_CODE = #{walkBoardCode}
+	</select>
+	
+	<select id="selectWalkViewInfo"	resultType="com.GroupProject.dto.WalkboardDto">
+		SELECT  * FROM WALKBOARD WHERE WALK_CODE = #{walkBoardCode}
+	</select>
+	
+	<select id="selectMemberLocalAddr"	resultType="String">
+		SELECT MEMBER_ADDRESS FROM MEMBER WHERE MEMBER_ID = #{searchId}
+	</select>
+	
+	<select id="selectWalkRecommentMaxCode"	resultType="String">
+		SELECT MAX(RECOMMENT_CODE) FROM RECOMMENT
+	</select>
+	
+	<insert id="insertWalkRecomment">
+	INSERT INTO RECOMMENT (RECOMMENT_CODE, RECOMMENT_BOARDCODE, RECOMMENT_WRITER, RECOMMENT_CONTENT, RECOMMENT_DATE, RECOMMENT_STATE, RECOMMENT_REPORT) 
+	VALUES(#{recomment_code},#{recomment_boardcode},#{recomment_writer},#{recomment_content},SYSDATE,1,0)
+	</insert>
+	
+	<select id="selectWalkRecomment"	resultType="com.GroupProject.dto.RecommentDto">
+		SELECT RECOMMENT_CODE, RECOMMENT_BOARDCODE, RECOMMENT_WRITER, RECOMMENT_CONTENT, RECOMMENT_DATE, RECOMMENT_STATE, RECOMMENT_REPORT, MEMBER_PROFILE
+		FROM RECOMMENT,MEMBER WHERE RECOMMENT_WRITER = MEMBER_ID AND RECOMMENT_BOARDCODE = #{boardCode} AND RECOMMENT_STATE = 1 ORDER BY RECOMMENT_DATE
+	</select>
+	
+	<update id="walkRecommentDelState">
+		UPDATE RECOMMENT SET RECOMMENT_STATE = 0 WHERE RECOMMENT_CODE = #{boardCode}
+	</update>
+	
+	<update id="walkRecommentModify">
+		UPDATE RECOMMENT SET RECOMMENT_CONTENT = #{recomment_content} WHERE RECOMMENT_CODE = #{recomment_code}
+	</update>
+	
+	
+	<update id="walkDelState">
+		UPDATE WALKBOARD SET WALK_STATE = 0 WHERE WALK_CODE = #{boardCode}
+	</update>
+	
+	<select id="selectWalkboardInfo"	resultType="com.GroupProject.dto.WalkboardDto">
+		SELECT * FROM WALKBOARD WHERE WALK_CODE = #{boardCode}
+	</select>
+	
+	<update id="updateWalkViewInfo">
+		UPDATE WALKBOARD SET WALK_TITLE = #{walk_title}, WALK_CONTENT = #{walk_content},
+		WALK_TIME = TO_DATE(#{walk_time},'yyyyMMdd/HH24MI'), WALK_BODYTYPE = #{walk_bodytype}, WALK_WEATHERINFO = #{walk_weatherinfo}, WALK_PEOPLE = #{walk_people}
+		<if test="walk_startaddr != ''">
+		,WALK_MAP = #{walk_map}, WALK_STARTADDR = #{walk_startaddr}
+		</if> 
+		WHERE WALK_WRITER = #{walk_writer}
+	</update>
+	
+	
+	<update id="updateWalkViewJoin">
+		UPDATE WALKBOARD SET WALK_MID = #{midList}	WHERE WALK_CODE = #{boardCode}
+	</update>
+	
+	<update id="updateWalkViewLeave">
+		UPDATE WALKBOARD SET WALK_MID = #{midList}	WHERE WALK_CODE = #{boardCode}
+	</update>
+
+	<select id="selectWalkRecommentReport"	resultType="int">
+		SELECT NVL(COUNT(*),0) FROM REPORT WHERE CODE = #{code} AND MEMBER_ID = #{member_id}
+	</select>
+	
+	<insert id="insertWalkRCReport">
+		INSERT INTO REPORT VALUES(#{code},#{member_id},#{boardcode})
+	</insert>
+	
+	<update id="updateRecommentReport">
+		UPDATE RECOMMENT SET RECOMMENT_REPORT =  RECOMMENT_REPORT+1 WHERE RECOMMENT_CODE = #{code}
+	</update>
+	
+	<update id="updateWalkReplycount">
+		UPDATE WALKBOARD SET WALK_REPLYCOUNT =  WALK_REPLYCOUNT+1 WHERE WALK_CODE = #{recomment_boardcode}
+	</update>
+	
+	<select id="selectWalkBoardCode"	resultType="String">
+		SELECT RECOMMENT_BOARDCODE FROM RECOMMENT WHERE RECOMMENT_CODE = #{recommentCode}
+	</select>
+	
+	<update id="updateWalkDelReplycount">
+		UPDATE WALKBOARD SET WALK_REPLYCOUNT =  WALK_REPLYCOUNT-1 WHERE WALK_CODE = #{boardcode}
+	</update>
+		
+	<select id="selectMemberCrewCode" resultType="String">
+		SELECT MEMBER_CREWCODE FROM MEMBER WHERE MEMBER_ID = #{searchId}
+	</select>
+
+	<update id="updatereviewhits">
+		UPDATE WALKBOARD SET WALK_HITS = WALK_HITS + 1 WHERE WALK_CODE = #{walkBoardCode}
+	</update>
+	
+</mapper>

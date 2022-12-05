@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.GroupProject.dao.ShoppingDao" >
+	
+	<!-- 쇼핑몰 페이지 이동 -->
+	<select id="selectGoodsList" resultType="com.GroupProject.dto.GoodsDto">
+		SELECT * FROM GOODS
+		ORDER BY GOODS_CODE
+	</select>
+	
+	<insert id="insertOderInfoBasketState">
+		INSERT INTO BASKET(BASKET_ID,BASKET_GNAME,BASKET_GPRICE,BASKET_GAMOUNT,BASKET_GIMAGE,BASKET_GCODE)
+		VALUES ( #{basket_id},#{basket_gname},#{basket_gprice},1,#{basket_gimage},#{basket_gcode} )
+	
+	</insert>
+	
+	<select id="selectMyBasket" resultType="com.GroupProject.dto.BasketDto">
+		SELECT * FROM BASKET
+		WHERE BASKET_ID = #{basket_id} AND BASKET_GCODE = #{basket_gcode}	
+	
+	</select>
+
+	<update id="updateBasketGamount">
+		UPDATE BASKET
+		SET BASKET_GAMOUNT = BASKET_GAMOUNT + 1
+		WHERE BASKET_GCODE = #{basket_gcode}	
+	</update>
+	
+	<!-- 장바구니 페이지 이동 = 상품 정보 출력 -->
+	<select id="selectOrderInfoBasket" resultType="com.GroupProject.dto.BasketDto">
+		SELECT BASKET_ID, BASKET_GCODE, BASKET_GAMOUNT, BASKET_GNAME, BASKET_GIMAGE, BASKET_GPRICE
+		FROM BASKET WHERE BASKET_ID = #{loginId} ORDER BY BASKET_GPRICE DESC
+	</select>
+	
+	<!-- 회원 정보 조회 -->
+	<select id="selectBasketMemberInfo" resultType="com.GroupProject.dto.MembersDto">
+		SELECT MEMBER_NAME ,MEMBER_TEL, MEMBER_ADDRESS FROM MEMBER WHERE MEMBER_ID = #{loginId}
+	</select>
+	
+	<!-- 장바구니 상품 갯수 수정 처리 -->
+	<update id="updateBasketAmount">
+		UPDATE BASKET SET BASKET_GAMOUNT = #{basket_gamount} WHERE BASKET_ID = #{loginId} AND BASKET_GCODE = #{basket_gcode} 
+	</update>
+	
+	<!-- 장바구니 상품 삭제 -->
+	<delete id="deleteBasketList">
+		DELETE FROM BASKET WHERE BASKET_ID = #{loginId} AND BASKET_GCODE = #{basket_gcode}
+	</delete>
+	
+	<!-- 결제 테이블 생성 -->
+	<insert id="insertPayInfoList">
+		INSERT INTO PAY (PAY_MID, PAY_AMOUNT, PAY_DATE, PAY_STATE)
+		VALUES (#{pay_mid}, #{pay_amount}, TO_DATE(#{pay_date}, 'YYYY-MM-DD HH24:MI:SS'), 1)
+	</insert>
+	
+	<!-- 장바구니 리스트 모두 삭제 -->
+	<delete id="deleteBasketListAll">
+		DELETE FROM BASKET WHERE BASKET_ID = #{loginId}
+	</delete>
+	
+	<!-- 주문 내역 테이블 생성 -->
+	<insert id="insertOrderInfoList">
+		INSERT INTO ORDERINFO (ORDER_MID, ORDER_GCODE, ORDER_GAMOUNT, ORDER_DATE, ORDER_ADDRESS)
+		VALUES (#{order_mid}, #{order_gcode}, #{order_gamount}, TO_DATE(#{order_date}, 'YYYY-MM-DD HH24:MI:SS'), #{order_address})
+	</insert>
+	
+	<!-- 이하 조미정님 dao.xml -->
+	<select resultType="com.GroupProject.dto.OrderinfoDto" id="selectGoodsOrderList"> 
+	SELECT ORD.ORDER_MID,TO_CHAR(ORD.ORDER_DATE, 'YYYY-MM-DD HH24:MI:SS') AS ORDER_DATE, 
+	GD.GOODS_TYPE AS ORDER_TYPE, GD.GOODS_NAME AS ORDER_NAME, GD.GOODS_PRICE AS ORDER_PRICE , 
+	P.PAY_STATE AS ORDER_STATE, ORD.ORDER_GAMOUNT, GD.GOODS_IMAGE AS ORDER_IMAGE, P.PAY_AMOUNT AS 
+	ORDER_TOTALPRICE FROM ORDERINFO ORD, PAY P, MEMBER M, GOODS GD WHERE ORD.ORDER_MID = M.MEMBER_ID 
+	AND ORD.ORDER_MID = P.PAY_MID AND ORD.ORDER_DATE = P.PAY_DATE AND ORD.ORDER_GCODE = GD.GOODS_CODE 
+	AND ORD.ORDER_MID = #{order_mid} ORDER BY ORD.ORDER_DATE 
+	</select>
+
+	<update id="updateGoodsCancellation"> 
+	UPDATE PAY SET PAY_STATE = #{order_state} WHERE PAY_MID = #{order_mid} AND PAY_DATE = TO_DATE(#{order_date}, 'YYYY-MM-DD HH24:MI:SS') 
+	</update>
+</mapper>  
+  
+  
+  
+  
+  

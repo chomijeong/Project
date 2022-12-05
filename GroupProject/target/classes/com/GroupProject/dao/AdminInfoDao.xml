@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.GroupProject.dao.AdminInfoDao">
+
+	<select id="selectBoardReportList1" resultType="com.GroupProject.dto.TotalBoardDto" >
+        SELECT WALK_CODE AS TOTAL_CODE, WALK_WRITER AS TOTAL_WRITER, WALK_DATE AS TOTAL_DATE, WALK_TITLE AS TOTAL_TITLE,
+         		WALK_CONTENT AS TOTAL_CONTENT, WALK_FILE AS TOTAL_FILE, WALK_HITS AS TOTAL_HITS, WALK_STATE AS TOTAL_STATE,
+         		  WALK_REPORT AS TOTAL_REPORT
+		FROM WALKBOARD WHERE WALK_REPORT >= 1 AND WALK_STATE = 1
+	</select>
+	
+	<select id="selectBoardReportList2" resultType="com.GroupProject.dto.TotalBoardDto" >
+        SELECT BOARD_CODE AS TOTAL_CODE, BOARD_WRITER AS TOTAL_WRITER, BOARD_DATE AS TOTAL_DATE, BOARD_TITLE AS TOTAL_TITLE,
+         		BOARD_CONTENT AS TOTAL_CONTENT, BOARD_FILE AS TOTAL_FILE, BOARD_HITS AS TOTAL_HITS, BOARD_STATE AS TOTAL_STATE,
+         		  BOARD_REPORT AS TOTAL_REPORT
+		FROM BOARD WHERE BOARD_REPORT >= 1 AND BOARD_STATE = 1
+	</select>
+
+	<update id="updateMemberState">
+		UPDATE MEMBER
+		SET MEMBER_STATE = #{member_state}
+		WHERE MEMBER_ID = #{report_id}
+	</update>
+
+
+	<update id="updateWalkReportState">
+		UPDATE WALKBOARD 
+		SET WALK_STATE = 5
+		WHERE WALK_CODE = #{total_code}
+	</update>
+	
+	<update id="updateBoardReportState">
+		UPDATE BOARD 
+		SET BOARD_STATE = 5
+		WHERE BOARD_CODE = #{total_code}
+	</update>
+
+	<select id = "selectRecommentReportList" resultType="com.GroupProject.dto.RecommentDto" >
+		SELECT * FROM RECOMMENT 
+		WHERE RECOMMENT_REPORT >= 1 AND RECOMMENT_STATE = 1 
+		ORDER BY RECOMMENT_DATE
+	</select>
+
+	<update id="updateRecommentReportState">
+		UPDATE RECOMMENT
+		SET RECOMMENT_STATE = 5
+		WHERE RECOMMENT_CODE = #{recomment_code}
+	</update>
+
+	
+	<select id ="selectHospital" resultType="com.GroupProject.dto.HoDto">
+		SELECT HO_CODE, HO_NAME, HO_ADDR, HO_TEL, HO_STATE FROM HO 
+		WHERE HO_CODE = #{ho_code}
+	</select>
+	
+	<update id="adminModifyHospital">
+		UPDATE HO
+		SET HO_NAME = #{ho_name}, HO_ADDR = #{ho_addr}, HO_TEL = #{ho_tel}, HO_STATE = #{ho_state}
+		WHERE HO_CODE = #{ho_code}
+	</update>
+	
+	<select id ="selectHotel" resultType="com.GroupProject.dto.HoDto">
+		SELECT HO_CODE, HO_NAME, HO_ADDR, HO_TEL, HO_STATE FROM HO 
+		WHERE HO_CODE = #{ho_code}
+	</select>
+	
+	<update id="adminModifyHotel">
+		UPDATE HO
+		SET HO_NAME = #{ho_name}, HO_ADDR = #{ho_addr}, HO_TEL = #{ho_tel}, HO_STATE = #{ho_state}
+		WHERE HO_CODE = #{ho_code}
+	</update>
+	
+	<select id="crewViewPage" resultType="com.GroupProject.dto.WalkboardDto">
+		SELECT * FROM WALKBOARD
+		WHERE WALK_CODE = #{walk_code}	
+	</select>
+	
+	<select id="reviewViewPage" resultType="com.GroupProject.dto.WalkboardDto">
+		SELECT * FROM WALKBOARD
+		WHERE WALK_CODE = #{walk_code}	
+	</select>
+	
+	<select id="promotionCrewViewPage" resultType="com.GroupProject.dto.WalkboardDto">
+		SELECT * FROM WALKBOARD
+		WHERE WALK_CODE = #{walk_code}	
+	</select>
+	
+	<select id="WalkViewPage" resultType="com.GroupProject.dto.WalkboardDto">
+		SELECT * FROM WALKBOARD
+		WHERE WALK_CODE = #{walk_code}	
+	</select>
+
+	<select id="TipsViewPage" resultType="com.GroupProject.dto.BoardDto">
+		SELECT * FROM BOARD
+		WHERE BOARD_CODE = #{total_code}	
+	</select>
+
+	<update id="updateWalkReportValue">
+        UPDATE WALKBOARD 
+        SET WALK_REPORT = 0
+        WHERE WALK_CODE = #{total_code}
+    </update>
+
+    <update id="updateBoardReportValue">
+        UPDATE BOARD 
+        SET BOARD_REPORT = 0
+        WHERE BOARD_CODE = #{total_code}
+    </update>
+    
+    <update id="updateRecommentReportValue">
+        UPDATE RECOMMENT
+        SET RECOMMENT_REPORT = 0
+        WHERE RECOMMENT_CODE = #{recomment_code}
+    </update>
+</mapper>

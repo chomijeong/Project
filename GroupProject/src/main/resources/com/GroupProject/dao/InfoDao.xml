@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.GroupProject.dao.InfoDao">
+
+	<select id="selectHospitalList" resultType="com.GroupProject.dto.HoDto">
+		SELECT HO_CODE, HO_NAME, replace(HO_ADDR, '-', ' ') AS HO_ADDR, HO_TEL, HO_STATE FROM HO 
+		WHERE SUBSTR(HO_CODE, 0,2) = 'HP' 
+		AND HO_STATE = 1
+		ORDER BY HO_CODE
+	</select>
+	
+	<!-- 전체 , 전체 -->
+	<select id="searchHospitalList1" resultType="com.GroupProject.dto.HoDto">
+		SELECT HO_CODE, HO_NAME, replace(HO_ADDR, '-', ' ') AS HO_ADDR, HO_TEL, HO_STATE FROM HO
+		WHERE SUBSTR(HO_CODE, 0,2) = 'HP'
+		AND HO_STATE = 1
+		ORDER BY HO_CODE
+	</select>
+
+	<!-- 서울, 전체 -->
+	<select id="searchHospitalList2" resultType="com.GroupProject.dto.HoDto">
+		SELECT HO_CODE, HO_NAME, replace(HO_ADDR, '-', ' ') AS HO_ADDR, HO_TEL, HO_STATE FROM HO
+		WHERE SUBSTR(HO_ADDR, 1, INSTR(HO_ADDR, '-') - 1) = #{metropolis}
+		AND SUBSTR(HO_CODE, 0,2) = 'HP'
+		AND HO_STATE = 1
+		ORDER BY HO_CODE
+	</select>
+	
+	<!-- 서울, 강서 -->
+	<select id="searchHospitalList3" resultType="com.GroupProject.dto.HoDto">
+		SELECT HO_CODE, HO_NAME, replace(HO_ADDR, '-', ' ') AS HO_ADDR, HO_TEL, HO_STATE FROM HO
+		WHERE SUBSTR(HO_ADDR, 1, INSTR(HO_ADDR, '-') - 1) = #{metropolis}
+		AND HO_ADDR LIKE '%'||#{city}||'%' 
+		AND SUBSTR(HO_CODE, 0,2) = 'HP'
+		AND HO_STATE = 1
+		ORDER BY HO_CODE
+	</select>
+
+	<select id="searchHospitalList4" resultType="com.GroupProject.dto.HoDto">
+		SELECT HO_CODE, HO_NAME, replace(HO_ADDR, '-', ' ') AS HO_ADDR, HO_TEL, HO_STATE FROM HO
+		WHERE HO_NAME LIKE '%'||#{findName}||'%' 
+		AND SUBSTR(HO_CODE, 0,2) = 'HP'
+		AND HO_STATE = 1
+		ORDER BY HO_CODE
+	</select>
+
+	<select id="searchHospitalList5" resultType="com.GroupProject.dto.HoDto">
+		SELECT HO_CODE, HO_NAME, replace(HO_ADDR, '-', ' ') AS HO_ADDR, HO_TEL, HO_STATE FROM HO
+		WHERE SUBSTR(HO_ADDR, 1, INSTR(HO_ADDR, '-') - 1) = #{metropolis}
+		AND HO_NAME LIKE '%'||#{findName}||'%' 
+		AND SUBSTR(HO_CODE, 0,2) = 'HP'
+		AND HO_STATE = 1
+		ORDER BY HO_CODE
+	</select>
+
+	<!-- 서울, 강서, 이름 검색 -->
+	<select id="searchHospitalList6" resultType="com.GroupProject.dto.HoDto">
+		SELECT HO_CODE, HO_NAME, replace(HO_ADDR, '-', ' ') AS HO_ADDR, HO_TEL, HO_STATE FROM HO
+		WHERE SUBSTR(HO_ADDR, 1, INSTR(HO_ADDR, '-') - 1) = #{metropolis}
+		AND HO_ADDR LIKE '%'||#{city}||'%' 
+		AND HO_NAME LIKE '%'||#{findName}||'%' 
+		AND SUBSTR(HO_CODE, 0,2) = 'HP'
+		AND HO_STATE = 1
+		ORDER BY HO_CODE
+	</select>
+	
+	<select id="selectHotelList" resultType="com.GroupProject.dto.HoDto">
+		SELECT HO_CODE, HO_NAME, replace(HO_ADDR, '-', ' ') AS HO_ADDR, HO_TEL, HO_STATE FROM HO 
+		WHERE SUBSTR(HO_CODE, 0,2) = 'HT'
+		AND HO_STATE = 1
+		ORDER BY HO_CODE
+	</select>
+	
+	<!-- 전체 , 전체 -->
+	<select id="searchHotelList1" resultType="com.GroupProject.dto.HoDto">
+		SELECT HO_CODE, HO_NAME, replace(HO_ADDR, '-', ' ') AS HO_ADDR, HO_TEL, HO_STATE FROM HO
+		WHERE SUBSTR(HO_CODE, 0,2) = 'HT'
+		AND HO_STATE = 1
+		ORDER BY HO_CODE
+	</select>
+
+	<!-- 서울, 전체 -->
+	<select id="searchHotelList2" resultType="com.GroupProject.dto.HoDto">
+		SELECT HO_CODE, HO_NAME, replace(HO_ADDR, '-', ' ') AS HO_ADDR, HO_TEL, HO_STATE FROM HO
+		WHERE SUBSTR(HO_ADDR, 1, INSTR(HO_ADDR, '-') - 1) = #{metropolis}
+		AND SUBSTR(HO_CODE, 0,2) = 'HT'
+		AND HO_STATE = 1
+		ORDER BY HO_CODE
+	</select>
+	
+	<!-- 서울, 강서 -->
+	<select id="searchHotelList3" resultType="com.GroupProject.dto.HoDto">
+		SELECT HO_CODE, HO_NAME, replace(HO_ADDR, '-', ' ') AS HO_ADDR, HO_TEL, HO_STATE FROM HO
+		WHERE SUBSTR(HO_ADDR, 1, INSTR(HO_ADDR, '-') - 1) = #{metropolis}
+		AND HO_ADDR LIKE '%'||#{city}||'%' 
+		AND SUBSTR(HO_CODE, 0,2) = 'HT'
+		AND HO_STATE = 1
+		ORDER BY HO_CODE
+	</select>
+
+	<select id="searchHotelList4" resultType="com.GroupProject.dto.HoDto">
+		SELECT HO_CODE, HO_NAME, replace(HO_ADDR, '-', ' ') AS HO_ADDR, HO_TEL, HO_STATE FROM HO
+		WHERE HO_NAME LIKE '%'||#{findName}||'%' 
+		AND SUBSTR(HO_CODE, 0,2) = 'HT'
+		AND HO_STATE = 1
+		ORDER BY HO_CODE
+	</select>
+
+	<select id="searchHotelList5" resultType="com.GroupProject.dto.HoDto">
+		SELECT HO_CODE, HO_NAME, replace(HO_ADDR, '-', ' ') AS HO_ADDR, HO_TEL, HO_STATE FROM HO
+		WHERE SUBSTR(HO_ADDR, 1, INSTR(HO_ADDR, '-') - 1) = #{metropolis}
+		AND HO_NAME LIKE '%'||#{findName}||'%' 
+		AND SUBSTR(HO_CODE, 0,2) = 'HT'
+		AND HO_STATE = 1
+		ORDER BY HO_CODE
+	</select>
+
+	<!-- 서울, 강서, 이름 검색 -->
+	<select id="searchHotelList6" resultType="com.GroupProject.dto.HoDto">
+		SELECT HO_CODE, HO_NAME, replace(HO_ADDR, '-', ' ') AS HO_ADDR, HO_TEL, HO_STATE FROM HO
+		WHERE SUBSTR(HO_ADDR, 1, INSTR(HO_ADDR, '-') - 1) = #{metropolis}
+		AND HO_ADDR LIKE '%'||#{city}||'%' 
+		AND HO_NAME LIKE '%'||#{findName}||'%' 
+		AND SUBSTR(HO_CODE, 0,2) = 'HT'
+		AND HO_STATE = 1
+		ORDER BY HO_CODE
+	</select>
+	
+	
+	
+</mapper>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.GroupProject.dao.AdminMemberDao">
+
+<select id="selectMemberList" resultType="com.GroupProject.dto.MembersDto">
+SELECT MEMBER_ID, MEMBER_NAME, MEMBER_EMAIL, MEMBER_STATE
+FROM MEMBER
+</select>
+
+<update id="updateMemberState">
+UPDATE MEMBER
+SET MEMBER_STATE = #{member_state}
+WHERE MEMBER_ID = #{member_id}
+
+
+</update>
+
+
+</mapper>

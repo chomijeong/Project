@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.GroupProject.dao.MemberDao">
+
+	<!-- 아이디 중복 처리 -->
+	<select id="selectMemberId" resultType="String">
+		SELECT MEMBER_ID FROM MEMBER WHERE MEMBER_ID = #{member_id}
+	</select>
+
+	<!-- 반려견 이름 중복 ( 같은 주인 & 같은 반려견 이름 금지 ) -->
+	<select id="selectDogName" resultType="String">
+		SELECT DOG_NAME FROM DOGINFO WHERE DOG_OWNER = #{dog_owner} AND DOG_NAME = #{dog_name}
+	</select>
+	
+	<!-- 회원가입 처리 -->
+	<insert id="insertMemberInfo">
+		INSERT INTO MEMBER ( MEMBER_ID, MEMBER_PW, MEMBER_NAME, MEMBER_BIRTH, MEMBER_TEL, MEMBER_EMAIL, MEMBER_ADDRESS, MEMBER_PROFILE, MEMBER_STATE, WALK_STATE, MEMBER_GENDER)
+		VALUES (#{member_id}, #{member_pw}, #{member_name}, #{member_birth}, #{member_tel}, #{member_email}, #{member_address}, #{member_profile}, 1, 1, #{member_gender} )
+	</insert>
+	
+	<!-- 반려견 품종 검색 처리 -->
+	<select id="selectDogType" resultType="com.GroupProject.dto.DogTypeDto">
+		SELECT DOG_TYPE FROM DOGTYPE WHERE DOG_TYPE LIKE '%${dogtype}%'
+	</select>
+	
+	<!-- 반려견 등록 처리 - 반려견 등록 후 추가 등록 페이지 생성 -->
+	<insert id="insertDogInfo">
+		INSERT INTO DOGINFO (DOG_OWNER, DOG_NAME, DOG_TYPE, DOG_WEIGHT, DOG_GENDER, DOG_STATE, DOG_BIRTH, DOG_IMAGE, DOG_SPAYING)
+		VALUES (#{dog_owner}, #{dog_name}, #{dog_type}, #{dog_weight}, #{dog_gender}, 1, TO_DATE(#{dog_birth}, 'YYYY-MM'), #{dog_image}, #{dog_spaying})
+	</insert>
+	
+	<!-- 로그인 처리 -->
+	<select id="selectMemberLoginInfo" resultType="com.GroupProject.dto.MembersDto">
+		SELECT MEMBER_ID, MEMBER_PROFILE, MEMBER_STATE FROM MEMBER WHERE MEMBER_ID = #{member_id} AND MEMBER_PW = #{member_pw}
+	</select>
+	
+	<!-- 개인 정보 조회 --> 
+	<select id="selectMemberInfo" resultType="com.GroupProject.dto.MembersDto">
+		SELECT MEMBER_ID, MEMBER_PW, MEMBER_NAME, TO_CHAR(MEMBER_BIRTH, 'YYYY-MM-DD') AS MEMBER_BIRTH, 
+		MEMBER_TEL, MEMBER_EMAIL, MEMBER_ADDRESS, MEMBER_PROFILE, MEMBER_STATE, WALK_STATE, MEMBER_GENDER, CREW_NAME AS MEMBER_CREWNAME
+		FROM MEMBER M LEFT OUTER JOIN CREW C ON M.MEMBER_CREWCODE = C.CREW_CODE WHERE M.MEMBER_ID = #{loginId}
+	</select>
+	
+	<!-- 반려견 정보 조회 -->
+	<select id="selectDogInfo" resultType="com.GroupProject.dto.DogInfoDto">
+		SELECT DOG_OWNER, DOG_NAME, DOG_TYPE, DOG_WEIGHT, DOG_GENDER, DOG_STATE, TO_CHAR(DOG_BIRTH, 'YYYY-MM') AS DOG_BIRTH, DOG_IMAGE, DOG_SPAYING
+		FROM DOGINFO WHERE DOG_OWNER = #{loginId} AND DOG_STATE = 1 ORDER BY DOG_BIRTH ASC
+	</select>
+	
+	<!-- 개인 정보 수정 처리 -->
+	<update id="updateMemberInfo">
+		UPDATE MEMBER SET MEMBER_PW = #{member_pw}, MEMBER_BIRTH = #{member_birth}, MEMBER_EMAIL = #{member_email}, MEMBER_TEL = #{member_tel}, MEMBER_ADDRESS = #{member_address} <if test="member_profile != null">,MEMBER_PROFILE = #{member_profile}</if>
+		WHERE MEMBER_ID = #{member_id}
+	</update>
+	
+	<!-- 개인 정보 수정 _ 이전 프로필 사진 조회 -->
+	<select id="selectMemberProfile" resultType="String">
+		SELECT MEMBER_PROFILE FROM MEMBER WHERE MEMBER_ID = #{member_id}
+	</select>
+	
+	<!-- 반려견 정보 수정 처리 -->
+	<update id="updateDogInfo">
+		UPDATE DOGINFO SET DOG_WEIGHT = #{dog_weight}, DOG_TYPE = #{dog_type}, DOG_BIRTH = TO_DATE(#{dog_birth}, 'YYYY-MM'), DOG_SPAYING = #{dog_spaying} <if test="dog_image != null">,DOG_IMAGE = #{dog_image}</if>
+		WHERE DOG_OWNER = #{dog_owner} AND DOG_NAME = #{dog_name}
+	</update>
+	
+	<!-- 번려견 정보 삭제 처리 -->
+	<update id="updateDogState">
+		UPDATE DOGINFO SET DOG_STATE = 0 WHERE DOG_OWNER = #{dog_owner} AND DOG_NAME = #{dog_name}
+	</update>
+	
+	<!-- 회원탈퇴 처리 -->
+	<update id="updateMemberState">
+		UPDATE MEMBER SET MEMBER_STATE = 0 WHERE MEMBER_ID = #{member_id}
+	</update>
+	
+	<!-- 아이디 찾기 -->
+	<select id="selectMemberFindId" resultType="com.GroupProject.dto.MembersDto">
+		SELECT MEMBER_ID, MEMBER_EMAIL FROM MEMBER WHERE MEMBER_NAME = #{member_name} AND MEMBER_EMAIL = #{member_email}
+	</select>
+	
+	<!-- 비밀번호 변경 -->
+	<update id="updateMemberPw">
+		UPDATE MEMBER SET MEMBER_PW = #{member_pw} WHERE MEMBER_EMAIL = #{member_email}
+	</update>
+	
+	<!-- 반려견 정보 수정 _ 이전 프로필 사진 조회 -->
+	<select id="selectDogImage" resultType="String">
+		SELECT DOG_IMAGE FROM DOGINFO WHERE DOG_OWNER = #{dog_owner} AND DOG_NAME = #{dog_name}
+	</select>
+	
+	<!-- 댓글 테이블 프로필 수정 -->
+	<update id="updateRecommentProfile">
+		UPDATE RECOMMENT SET RECOMMENT_PROFILE = #{member_profile, jdbcType = VARCHAR} 	WHERE RECOMMENT_WRITER = #{member_id}
+	</update>
+	
+	<!-- 회원의 크루코드조회 -->
+	<select id="selectMemberCrewCode" resultType="String">
+		SELECT MEMBER_CREWCODE FROM MEMBER WHERE MEMBER_ID = #{member_id}
+	</select>
+	
+</mapper>  
+  
+  
+  
+  
+  

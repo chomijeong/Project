@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.GroupProject.dao.AdminShoppingDao">
+
+<select id="selectGoodsList" resultType="com.GroupProject.dto.GoodsDto">
+SELECT GOODS_CODE, GOODS_NAME, GOODS_TYPE, GOODS_AMOUNT, GOODS_PRICE, GOODS_STATE
+FROM GOODS
+</select>
+
+<select id="selectGoodsViewInfo" resultType="com.GroupProject.dto.GoodsDto">
+SELECT GOODS_CODE, GOODS_NAME, GOODS_PRICE, GOODS_AMOUNT, GOODS_TYPE, GOODS_INTRODUCE, GOODS_IMAGE
+FROM GOODS
+WHERE GOODS_CODE = #{goods_code}
+</select>
+
+
+<select id="selectimagefile" resultType="com.GroupProject.dto.GoodsDto">
+SELECT GOODS_IMAGE
+FROM GOODS
+WHERE GOODS_CODE = #{goods_code}
+</select>
+
+
+<update id="updateGoodsModify">
+UPDATE GOODS
+SET GOODS_NAME = #{goods_name}, GOODS_IMAGE = #{goods_image}, GOODS_PRICE = #{goods_price}, GOODS_AMOUNT = #{goods_amount}, GOODS_TYPE = #{goods_type}, GOODS_INTRODUCE = #{goods_introduce}
+WHERE GOODS_CODE = #{goods_code}
+</update>
+
+<update id="updateGoodsState">
+UPDATE GOODS
+SET GOODS_STATE = #{goods_state}
+WHERE GOODS_CODE = #{goods_code}
+</update>
+
+<select id="getMaxGoods_code" resultType="String">
+	
+	SELECT MAX(GOODS_CODE) FROM GOODS
+	
+	
+</select>
+
+
+<insert id="insertGoods">
+	INSERT INTO GOODS VALUES(#{goods_code},#{goods_name},#{goods_price},#{goods_amount},#{goods_type},1,#{goods_image},#{goods_introduce})
+</insert>
+
+<select id="selectOrderList" resultType="com.GroupProject.dto.OrderinfoDto">
+SELECT ORD.ORDER_GCODE, ORD.ORDER_MID,TO_CHAR(ORD.ORDER_DATE, 'YYYY-MM-DD HH24:MI:SS') AS ORDER_DATE,
+ORD.ORDER_ADDRESS, GD.GOODS_TYPE AS ORDER_TYPE, GD.GOODS_NAME AS ORDER_NAME, M.MEMBER_TEL AS ORDER_TEL, GD.GOODS_PRICE AS ORDER_PRICE
+, P.PAY_STATE AS ORDER_STATE, ORD.ORDER_GAMOUNT
+FROM ORDERINFO ORD, PAY P, MEMBER M, GOODS GD
+WHERE ORD.ORDER_MID = M.MEMBER_ID AND ORD.ORDER_MID = P.PAY_MID
+AND ORD.ORDER_DATE = P.PAY_DATE AND ORD.ORDER_GCODE = GD.GOODS_CODE
+</select>
+
+<update id="updateOrderState">
+UPDATE PAY
+SET PAY_STATE = #{order_state}
+WHERE PAY_MID = #{order_mid}
+AND PAY_DATE = TO_DATE(#{order_date}, 'YYYY-MM-DD HH24:MI:SS')
+</update>
+
+</mapper>
